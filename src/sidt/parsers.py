@@ -22,7 +22,7 @@ def parse_dimacs(path):
 def parse_fukuoka_gf2(path):
     path = Path(path); text = path.read_text(encoding='utf-8', errors='replace')
     n_match = re.search(r'Number of variables\s*\(n\)\s*:\s*(\d+)', text, re.I)
-    m_match = re.search(r'Number of equations\s*\(m\)\s*:\s*(\d+)', text, re.I)
+    m_match = re.search(r'Number of (?:equations|polynomials)\s*\(m\)\s*:\s*(\d+)', text, re.I)
     seed_match = re.search(r'Seed\s*:\s*(\d+)', text, re.I)
     if not n_match or not m_match: raise ValueError('Not a recognized Fukuoka GF(2) instance')
     n, m = int(n_match.group(1)), int(m_match.group(1))
