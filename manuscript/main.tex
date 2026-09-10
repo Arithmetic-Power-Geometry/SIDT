@@ -1,0 +1,196 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,graphicx,microtype,hyperref,algorithm,algpseudocode}
+\usepackage[style=apa,backend=biber,natbib=true]{biblatex}
+\addbibresource{references.bib}
+\graphicspath{{../figures/}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\title{Structural Inversion Dimension Theory: Observation-Conditioned Collapse, Exact Affine Structure, and Falsifiable Limits for Symmetric-Key Inversion}
+\author{Mohammad Amir Khusru Akhtar}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+Nominal key length is a necessary security descriptor, but it does not by itself express how observations and publicly exploitable structure reshape an inversion problem. This paper develops Structural Inversion Dimension Theory (SIDT), an observation-conditioned framework for describing the residual candidate dimension that remains after transformations from an explicitly restricted admissibility class. The restriction is essential: we prove that unrestricted polynomial-time transformations make low SID effectively circular with efficient inversion. Within the restricted theory, we prove a quotient-certificate inversion bound, observation monotonicity, collapse accounting, public-conjugacy invariance, locality lower bounds, and an exact affine identity, $\mathrm{SID}_{\mathrm{aff}}=n-\mathrm{rank}(A)$. We construct a strict algebraic-normal-form degree hierarchy as a calibration result, separate semantic inversion behavior from raw algebraic degree and raw encoding treewidth, and place nonlinear analysis between a bounded-treewidth fixed-parameter tractable slice and a general multivariate-quadratic hardness barrier. A reproducibility study on 1,200 controlled instances validates the affine identity and locality bound with zero violations. A deliberately simple enumeration-runtime ablation provides a negative control: SIDT features do not materially outperform conventional structural predictors, preventing an unsupported superiority claim. We conclude with a falsifiable external-validation protocol using public MQ and SAT benchmark families and state the natural-collapse problem as the principal open test of the framework.
+\end{abstract}
+\noindent\textbf{Keywords:} structural inversion dimension; symmetric cryptography; algebraic cryptanalysis; parameterized complexity; residual key space; reproducible cryptanalysis
+
+\section{Introduction}
+Modern cryptanalysis has long exploited algebraic and logical structure rather than treating key search as an undifferentiated enumeration problem \parencite{shannon1949,bard2009,massacci2000,lascala2025}. Polynomial-system, SAT, Grobner-basis, hybrid, and multistep methods make this point concrete \parencite{bettale2009,bettale2012,lascala2022,lascala2024}. In parallel, parameterized-complexity research studies structural distance to tractability through backdoors and width measures \parencite{gaspers2017csp,gaspers2017hetero,dreier2024,gasper2026}. SIDT does not claim these mechanisms as new. Instead, it asks a cryptography-specific question: after observations are fixed, and after only a declared class of public structural operations is permitted, how much residual inversion freedom remains?
+
+The contribution is deliberately representation-aware and falsifiable. A candidate structural collapse must expose its admissibility class, account for its information budget, survive public reversible re-encoding, and be compared against established rank, degree, width, and backdoor baselines. No result in this paper implies a practical break of AES, BitLocker, or any deployed primitive.
+
+\section{Preliminaries and SIDT Definition}
+Let $E_K(P)$ be a keyed transformation with $K\in\{0,1\}^n$ and let $\mathcal O=\{(P_i,C_i)\}_{i=1}^q$ be observations. Define
+\[
+\Omega(E,\mathcal O)=\{K:E_K(P_i)=C_i\ \forall i\}.
+\]
+Let $\mathcal A$ be a fixed admissibility class of public, key-independent, efficiently evaluable structural maps whose relevant fibers are explicitly analyzable or enumerable.
+
+\begin{definition}[Restricted structural inversion dimension]
+For an admissible quotient $Q\in\mathcal A$, write $\Omega_z=\Omega\cap Q^{-1}(z)$. The restricted SID is the minimum logarithmic worst relevant fiber size achievable inside the fixed class,
+\[
+\mathrm{SID}_{\mathcal A}(E,\mathcal O)=\min_{Q\in\mathcal A}\log_2\max_z |\Omega_z|,
+\]
+with the operational requirement that the relevant quotient class can be identified and its residual candidates handled with the declared resources.
+\end{definition}
+
+\section{Core Results}
+\begin{theorem}[Quotient-certificate inversion]
+If a polynomial-time admissible quotient identifies the correct fiber and every relevant fiber has at most $2^b$ candidates that can be enumerated and verified with polynomial overhead, inversion costs $2^b\mathrm{poly}(n)$. Hence $b=O(\log n)$ is sufficient for polynomial-time inversion under these assumptions.
+\end{theorem}
+\begin{proof}
+Compute the quotient class, enumerate at most $2^b$ candidates, and verify each against $\mathcal O$.
+\end{proof}
+
+\begin{theorem}[Unrestricted circularity]
+If $\mathcal A$ may contain arbitrary polynomial-time transformations that can internally implement a polynomial-time inverter, then low SID ceases to be an independent explanatory quantity.
+\end{theorem}
+\begin{proof}
+Given an inverter $A(\mathcal O)=K^\star$, the quotient $Q(K,\mathcal O)=\mathbf 1[K=A(\mathcal O)]$ isolates a singleton correct fiber. Conversely, the previous theorem turns sufficiently small efficiently enumerable fibers into an inverter. Therefore unrestricted admissibility must be rejected.
+\end{proof}
+
+\begin{theorem}[Observation monotonicity]
+If $\mathcal O_1\subseteq\mathcal O_2$, then $\mathrm{SID}_{\mathcal A}(E,\mathcal O_2)\le \mathrm{SID}_{\mathcal A}(E,\mathcal O_1)$.
+\end{theorem}
+\begin{proof} $\Omega(E,\mathcal O_2)\subseteq\Omega(E,\mathcal O_1)$, so admissible fibers cannot enlarge. \end{proof}
+
+\begin{theorem}[Collapse accounting]
+If a quotient transcript has at most $2^r$ possible values over a $2^n$-element domain, at least one fiber has cardinality $2^{n-r}$ or larger. For sequential transcripts with budgets $r_1,\ldots,r_t$, the corresponding worst-domain-fiber lower bound is $2^{n-\sum_i r_i}$.
+\end{theorem}
+\begin{proof} Pigeonhole principle, applied to the full-domain partition induced by the transcript. \end{proof}
+
+\begin{theorem}[Exact affine SID]
+For an affine observation $Q(K)=AK\oplus b$ over $\mathbb F_2$ with $\rho=\mathrm{rank}(A)$, every nonempty fiber has cardinality $2^{n-\rho}$ and
+\[
+\boxed{\mathrm{SID}_{\mathrm{aff}}=n-\mathrm{rank}(A)}.
+\]
+\end{theorem}
+\begin{proof} Every nonempty fiber is a coset of $\ker A$; rank-nullity gives $\dim\ker A=n-\rho$. \end{proof}
+
+\begin{corollary}[Affine conservation]
+If affine collapse is $C_{\mathrm{aff}}=n-\mathrm{SID}_{\mathrm{aff}}$, then $C_{\mathrm{aff}}=\mathrm{rank}(A)$ and $C_{\mathrm{aff}}+\mathrm{SID}_{\mathrm{aff}}=n$.
+\end{corollary}
+
+\begin{theorem}[Locality lower bound]
+If observations collectively touch variable set $U\subseteq[n]$, then
+\[
+\mathrm{SID}\ge n-|U|.
+\]
+If each of $q$ observations touches at most $\ell$ variables, then $\mathrm{SID}\ge n-q\ell$.
+\end{theorem}
+\begin{proof} Every variable outside $U$ is unconstrained by the observations and therefore supplies a free binary degree of freedom. \end{proof}
+
+\section{Restricted Hierarchies and Representation Effects}
+Let $\mathcal A_d$ contain exact Boolean maps of ANF degree at most $d$. Since $\mathcal A_d\subseteq\mathcal A_{d+1}$, $\mathrm{SID}_{\mathcal A_{d+1}}\le\mathrm{SID}_{\mathcal A_d}$. Strictness can be calibrated using
+\[
+T_d(x_1,\ldots,x_{d+1})=(x_1,\ldots,x_d,x_{d+1}\oplus x_1\cdots x_d),
+\]
+which is an involution whose last inverse coordinate has unique ANF degree exactly $d$. This provides an infinite strict expressive hierarchy, but we treat it as calibration rather than a claim that algebraic degree itself is a new cryptographic parameter.
+
+Public polynomial-time bijections $H$ with polynomial-time inverse induce polynomial-time interreducible inversion instances. Thus any semantic SID comparison must be invariant under such allowed public conjugacies. Our constructed disguises also show that high raw algebraic degree or high raw primal treewidth of a particular encoding need not imply high inversion difficulty. These are representation-separation examples, not universal separations from representation-minimal width.
+
+\section{Nonlinear Complexity Boundary}
+General MQ solving is a central hard problem in cryptography, and recent work continues to study NP-complete variants \parencite{mqregular2025}. Consequently, an affine-style universal polynomial exact formula for arbitrary quadratic residual fibers would collapse known hardness barriers. By contrast, Boolean CSPs of bounded primal treewidth admit standard dynamic programming over a tree decomposition, giving a $2^{O(w)}\mathrm{poly}(n)$ exact feasibility/counting slice. This bounded-treewidth tractability is imported CSP machinery rather than a SIDT invention. The role of SIDT is to place the tractable slice and the general nonlinear barrier in one observation-conditioned inversion framework.
+
+\begin{algorithm}
+\caption{Exact affine SID}\label{alg:affine}
+\begin{algorithmic}[1]
+\Require Binary matrix $A\in\mathbb F_2^{m\times n}$
+\State $\rho\gets\mathrm{GF2Rank}(A)$
+\State \Return $n-\rho$
+\end{algorithmic}
+\end{algorithm}
+Algorithm~\ref{alg:affine} is the computational realization of the exact affine theorem.
+
+\begin{algorithm}
+\caption{Controlled SIDT validation protocol}\label{alg:validation}
+\begin{algorithmic}[1]
+\Require Seed $s$, requested instance count $N$
+\State Generate affine systems across variable counts, observation counts, and localities
+\State Compute rank, exact affine SID, support union, and approximate primal treewidth
+\State Generate small planted nonlinear Boolean systems of degrees 2--4
+\State Enumerate the full small domain to obtain exact residual count and runtime
+\State Check theorem identities and lower bounds
+\State Fit held-out baseline, structural, and structural-plus-SIDT predictors
+\State Export CSV/JSON tables and reproducible figures
+\end{algorithmic}
+\end{algorithm}
+Algorithm~\ref{alg:validation} defines the frozen controlled experiment.
+
+\section{Reproducibility Study}
+The released implementation generated 1,200 controlled instances using seed 20260910: 900 affine and 300 exact small nonlinear cases. Table~\ref{tab:validation} reports the theorem-validation results. There were no violations of the affine identity and no violations of the locality lower bound.
+
+\begin{table}[t]
+\centering
+\caption{Controlled theorem-validation results.}\label{tab:validation}
+\begin{tabular}{lr}
+\toprule
+Metric & Result\\
+\midrule
+Total instances & 1200\\
+Affine instances & 900\\
+Small nonlinear instances & 300\\
+Affine identity violations & 0\\
+Locality lower-bound violations & 0\\
+Unit tests & 5/5 passed\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:affine} visualizes the exact affine relation. Because SID is $n-\rho$, the scatter spans families with different $n$ rather than forming one universal line.
+\begin{figure}[t]
+\centering\includegraphics[width=.65\linewidth]{affine_rank_sid.pdf}
+\caption{Exact affine SID versus GF(2) rank across the controlled affine benchmark.}\label{fig:affine}
+\end{figure}
+
+For the nonlinear subset, exact enumeration runtime was used as a deliberately simple negative-control target. Table~\ref{tab:ablation} shows that adding SIDT features did not materially improve held-out prediction over conventional structural features. The tiny differences are not interpreted as superiority.
+
+\begin{table}[t]
+\centering
+\caption{Held-out runtime-prediction ablation on 300 exact small nonlinear instances.}\label{tab:ablation}
+\begin{tabular}{lrr}
+\toprule
+Model & $R^2$ & MAE (log$_{10}$ s)\\
+\midrule
+Basic: $n,q,$ degree & 0.97620 & 0.06918\\
+Conventional structural & 0.97693 & \textbf{0.06880}\\
+Structural + SIDT & \textbf{0.97702} & 0.06910\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:runtime} shows the relationship between exact residual dimension and enumeration runtime. Problem size dominates this experiment (Spearman $\rho\approx0.974$ for $n$), while exact SID has a much weaker marginal association. This negative result is valuable: enumeration mechanically scales with the full domain and is therefore a poor setting in which to claim SIDT-specific predictive benefit.
+\begin{figure}[t]
+\centering\includegraphics[width=.65\linewidth]{sid_vs_runtime.pdf}
+\caption{Exact residual dimension versus exact-enumeration runtime for the controlled nonlinear subset.}\label{fig:runtime}
+\end{figure}
+
+\section{External Validation Protocol}
+The next falsification stage uses independent public data rather than synthetic instances. The Fukuoka MQ Challenge provides GF(2) Type-I encryption systems with $m=2n$, multiple seeds, and published toy examples \parencite{fukuoka}. SAT Competition 2026 provides standardized DIMACS benchmark collections and instance-wise results \parencite{satcomp2026}. The released repository contains importers for both MQ text and DIMACS CNF. Public research-only cryptographic CNFs may be analyzed structurally, but reduced-round or challenge results must not be described as breaks of full deployed primitives. SAT and algebraic solvers such as CryptoMiniSat and Grobner/hybrid methods are established comparison baselines \parencite{cryptominisat,bard2009,bettale2012,lascala2025}.
+
+The primary external hypothesis is not ``SIDT is always better.'' It is: after controlling for variable count, degree, rank where applicable, locality, width, backdoor descriptors, and solver-specific statistics, does a predeclared SIDT profile provide reproducible incremental information about residual inversion behavior? Failure to do so narrows the theory's empirical claim.
+
+\section{Relationship to Existing Structural Methods}
+Backdoor sets move SAT/CSP instances into tractable classes; heterogeneous backdoors, backdoor depth, and backdoor treewidth already provide sophisticated distance-to-tractability notions \parencite{gaspers2017csp,gaspers2017hetero,dreier2024,gasper2026}. SIDT therefore does not introduce a generic ``hidden small variable set.'' Its proposed distinction is the observation-conditioned residual key fiber under an explicitly declared structural capability, together with exact affine calibration, information accounting, public-representation invariance, and kill tests. Whether that distinction produces independent predictive value on natural cryptographic families is an empirical question, not an assumption.
+
+\section{Applications and Societal Relevance}
+SIDT is intended as a defensive evaluation framework. Potential uses include pre-deployment structural auditing of cryptographic designs, analysis of lightweight primitives used in constrained devices, reproducible comparison of research ciphers, and education about the difference between nominal key length and operational inversion structure. In high-consequence domains such as healthcare, finance, connected devices, automotive systems, and critical infrastructure, an additional falsifiable structural audit could help identify design weaknesses before deployment. These are prospective applications; the present paper establishes the mathematical and reproducibility foundation rather than claiming deployment-ready certification.
+
+\section{Limitations and Kill Tests}
+The framework should be rejected or substantially narrowed if one of the following occurs: (i) restricted SID reduces to an established parameter under the same admissibility assumptions; (ii) representation invariance can only be obtained by making the definition circular; (iii) external benchmarks show no reproducible information beyond known structural parameters; or (iv) natural families fail to exhibit interpretable collapse spectra. The present controlled ablation already demonstrates the importance of this discipline: it does not support a claim of runtime-prediction superiority.
+
+\section{Open Problem: Natural Structural Collapse}
+The decisive test is to find a naturally motivated family $E_n$ and a predeclared admissibility class $\mathcal A$ such that
+\[
+\mathrm{SID}_{\mathcal A}(E_n)=O(\log n),
+\]
+while the effect is not already explained by known rank, algebraic-degree, width, or backdoor parameters. Artificial reversible disguises establish logical separations but do not settle this natural-family question. No full-strength modern cipher collapse is claimed here.
+
+\section{Conclusion}
+SIDT reframes a familiar cryptanalytic intuition in a stricter form: observations and exploitable structure may shrink an inversion problem, but that shrinkage must be quantified under a non-circular capability model and compared against existing structural explanations. The exact affine theorem, lower bounds, invariance principles, nonlinear complexity boundary, reproducible controlled validation, and explicit negative result provide a foundation that can be falsified rather than protected by definition. The next scientific step is independent benchmark testing and the search for a natural collapse not subsumed by established algebraic or parameterized-complexity measures.
+
+\printbibliography
+\end{document}
