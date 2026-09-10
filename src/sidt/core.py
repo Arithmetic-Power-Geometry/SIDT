@@ -4,62 +4,58 @@ import numpy as np
 import networkx as nx
 
 def gf2_rank(A):
-    A = np.array(A, dtype=np.uint8).copy() & 1
+    A = np.asarray(A, dtype=np.uint8).copy() & 1
+    if A.ndim != 2:
+        raise ValueError("A must be a 2D binary matrix")
     m, n = A.shape
     r = 0
     for c in range(n):
-        piv = next((i for i in range(r,m) if A[i,c]), None)
-        if piv is None:
+        pivot = next((i for i in range(r, m) if A[i, c]), None)
+        if pivot is None:
             continue
-        A[[r,piv]] = A[[piv,r]]
+        if pivot != r:
+            A[[r, pivot]] = A[[pivot, r]]
         for i in range(m):
-            if i != r and A[i,c]:
+            if i != r and A[i, c]:
                 A[i] ^= A[r]
         r += 1
         if r == m:
             break
     return int(r)
 
-def affine_sid(A, n=None):
-    A = np.array(A, dtype=np.uint8)
-    if n is None:
-        n = A.shape[1]
-    return int(n - gf2_rank(A))
+def affine_sid(A):
+    A = np.asarray(A, dtype=np.uint8)
+    return int(A.shape[1] - gf2_rank(A))
 
 def locality_lower_bound(n, supports):
-    U = set()
+    touched = set()
     for s in supports:
-        U |= set(s)
-    return int(n - len(U))
+        touched.update(int(x) for x in s)
+    return int(n - len(touched))
 
-def collapse_budget_lower_bound(n, alphabet_bits):
-    return int(max(0, n - sum(alphabet_bits)))
+def domain_collapse_lower_bound(n, transcript_bits):
+    return int(max(0, n - int(sum(transcript_bits))))
 
 def interaction_graph(n, supports):
-    G = nx.Graph()
-    G.add_nodes_from(range(n))
+    G = nx.Graph(); G.add_nodes_from(range(int(n)))
     for s in supports:
-        ss = list(s)
-        for i in range(len(ss)):
-            for j in range(i+1,len(ss)):
-                G.add_edge(ss[i], ss[j])
+        s = sorted(set(int(x) for x in s))
+        for i, u in enumerate(s):
+            for v in s[i+1:]:
+                G.add_edge(u, v)
     return G
 
 def approx_treewidth(n, supports):
     G = interaction_graph(n, supports)
     if G.number_of_edges() == 0:
         return 0
-    tw, _ = nx.algorithms.approximation.treewidth_min_fill_in(G)
-    return int(tw)
+    w, _ = nx.algorithms.approximation.treewidth_min_fill_in(G)
+    return int(w)
 
-def exact_residual_count(n, constraints):
-    count = 0
-    for x in range(1 << n):
-        if all(f(x) for f in constraints):
-            count += 1
-    return count
+def exact_solution_count(n, predicate):
+    return sum(1 for x in range(1 << int(n)) if predicate(x))
 
 def sid_from_count(count):
-    if count <= 0:
-        return None
-    return math.log2(count)
+    if count < 1:
+        return float("nan")
+    return float(math.log2(count))
