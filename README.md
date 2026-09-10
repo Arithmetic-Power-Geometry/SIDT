@@ -1,33 +1,53 @@
-# SIDT — Structural Inversion Dimension Theory
+# SIDT Reproducibility Package
 
-**Copyright (C) 2026 Mohammad Amir Khusru Akhtar**  
-Licensed under the Apache License 2.0.
+Structural Inversion Dimension Theory (SIDT): executable validation and benchmarking software.
 
-SIDT is a reproducibility package for studying observation-conditioned residual inversion dimension under explicitly restricted structural capabilities. It does **not** claim a practical break of AES, BitLocker, or any deployed cryptosystem.
+Copyright (C) 2026 Mohammad Amir Khusru Akhtar  
+License: Apache License 2.0
 
-## What is implemented
-- GF(2) rank and the exact affine identity `SID = n - rank(A)`.
-- Locality and transcript/collapse lower bounds.
-- Interaction-graph / approximate-treewidth diagnostics.
-- Controlled affine and nonlinear benchmark generation.
-- Exact residual counting for small nonlinear synthetic systems.
-- Predictive ablation comparing basic, conventional structural, and SIDT-augmented features.
-- Reproducible figures and CSV/JSON result artifacts.
-- Pytest suite and GitHub Actions CI.
+## Scope
 
-## Controlled result snapshot
-The frozen seed-20260910 run contains 1,200 controlled instances (900 affine, 300 exact small nonlinear). It produced zero violations of the exact affine identity and zero locality-bound violations. The first runtime ablation is intentionally negative: SIDT features did not materially improve held-out prediction beyond conventional structural features on brute-force enumeration runtime. See `RESULTS.md`.
+This repository contains **software, tests, benchmark adapters, generated experimental results, and CI only**. It contains no article/manuscript source.
 
-## Reproduce
+SIDT studies observation-conditioned residual inversion structure under explicitly declared admissibility restrictions. The software is for defensive and research evaluation on controlled or public benchmark instances. It does not claim a practical break of AES, BitLocker, or any deployed cryptosystem.
+
+## Reproduce locally
+
 ```bash
-python -m pip install -e .
-pytest -q
-python scripts/run_benchmarks.py --instances 1200
-python scripts/analyze_results.py
+bash reproduce.sh
 ```
 
-## Public benchmark adapters
-The manuscript identifies Fukuoka MQ Challenge GF(2), SAT Competition benchmarks, and selected research-only cryptographic SAT instances as external validation sources. This repository intentionally does not redistribute third-party datasets without their licenses. Adapter/import code can be extended using the documented formats.
+The default reproducibility run:
+1. runs unit tests;
+2. generates 5,000 controlled instances with frozen seed `20260910`;
+3. validates the exact affine identity and locality lower bound;
+4. runs repeated cross-validation for M1--M4 predictor families;
+5. downloads the public Fukuoka MQ Challenge Type-I GF(2) toy benchmarks (`n=10,15,20`);
+6. parses external structural metrics;
+7. writes machine-readable CSV/JSON results and PDF figures;
+8. writes `RESULTS.md`.
 
-## Safety / scope
-The package operates on synthetic, public challenge, and research benchmark instances. It is not intended for unauthorized access or recovery of keys from real systems.
+## Experimental comparison
+
+- M1: problem size / basic algebraic descriptors.
+- M2: M1 + locality information.
+- M3: conventional structural descriptors, including approximate primal treewidth.
+- M4: M3 + SIDT residual-dimension features.
+
+The software does not predeclare M4 superior. `Delta R2 = R2(M4)-R2(M3)` is reported as a falsifiable incremental-prediction test.
+
+## GitHub Actions artifact
+
+Every push to `main` runs the full workflow and uploads a `SIDT-results-<commit>` artifact containing:
+- generated CSV/JSON results,
+- generated figures,
+- the automated reproducibility report,
+- environment metadata.
+
+## External data
+
+Public benchmark data are downloaded at workflow/runtime and are **not redistributed** in this repository. The Fukuoka MQ Challenge GF(2) Type-I toy instances are used as an external parser/structure validation set. DIMACS import support is included for SAT benchmark studies.
+
+## Safety
+
+Use only controlled, public challenge, or authorized research instances. The package is not designed for unauthorized key recovery against real systems.
