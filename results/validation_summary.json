@@ -1,8 +1,0 @@
-{
-  "instances": 1200,
-  "affine_instances": 900,
-  "nonlinear_instances": 300,
-  "affine_formula_violations": 0,
-  "locality_bound_violations": 0,
-  "seed": 20260910
-}
