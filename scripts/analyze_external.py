@@ -9,11 +9,17 @@ def main(input_dir,out_csv):
     for p in base.rglob('*'):
         if not p.is_file(): continue
         low=p.name.lower()
+        # First honor explicit DIMACS extensions.
+        if low.endswith(('.cnf','.dimacs')):
+            try:
+                x=parse_dimacs(p); rows.append({'dataset':'DIMACS','file':str(p.relative_to(base)),'n':x['n'],'m':x['m'],'mean_constraint_support':statistics.mean(map(len,x['supports'])) if x['supports'] else 0,'tw_approx':approx_treewidth(x['n'],x['supports'])}); continue
+            except Exception:
+                pass
+        # Fukuoka challenge archives unpack to filenames whose extensions are not guaranteed;
+        # detect by file content rather than extension, while skipping obvious binary archives.
+        if low.endswith(('.bz2','.gz','.zip','.xz','.tar')): continue
         try:
-            if low.endswith(('.cnf','.dimacs')):
-                x=parse_dimacs(p); rows.append({'dataset':'DIMACS','file':str(p.relative_to(base)),'n':x['n'],'m':x['m'],'mean_constraint_support':statistics.mean(map(len,x['supports'])) if x['supports'] else 0,'tw_approx':approx_treewidth(x['n'],x['supports'])})
-            elif low.endswith(('.txt','.mq','.in')):
-                x=parse_fukuoka_gf2(p); rows.append({'dataset':'Fukuoka-GF2','file':str(p.relative_to(base)),'n':x['n'],'m':x['m'],'mean_constraint_support':float('nan'),'tw_approx':float('nan'),'mean_nonzero_coefficients':x['mean_nonzero_coefficients'],'seed':x['seed']})
+            x=parse_fukuoka_gf2(p); rows.append({'dataset':'Fukuoka-GF2','file':str(p.relative_to(base)),'n':x['n'],'m':x['m'],'mean_constraint_support':float('nan'),'tw_approx':float('nan'),'mean_nonzero_coefficients':x['mean_nonzero_coefficients'],'seed':x['seed']})
         except Exception:
             pass
     out=Path(out_csv); out.parent.mkdir(parents=True,exist_ok=True); pd.DataFrame(rows).to_csv(out,index=False)
