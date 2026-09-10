@@ -1,14 +1,46 @@
-name: SIDT CI
-on: [push, pull_request]
+name: SIDT Reproducibility
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -e . pytest
-      - run: pytest -q
-      - run: python scripts/run_benchmarks.py --instances 200
-      - run: python scripts/analyze_results.py
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest tabulate
+      - name: Unit tests
+        run: pytest -q
+      - name: Controlled 5000-instance benchmark
+        run: python scripts/run_controlled.py --instances 5000 --seed 20260910
+      - name: Repeated-CV analysis
+        run: python scripts/analyze_controlled.py
+      - name: Fetch public Fukuoka MQ toy benchmarks
+        run: bash scripts/fetch_public_benchmarks.sh
+      - name: Analyze public benchmark structures
+        run: python scripts/analyze_external.py
+      - name: Build reproducibility report
+        run: python scripts/build_report.py
+      - name: Create artifact bundle
+        run: |
+          mkdir -p artifact
+          cp -r results figures RESULTS.md artifact/
+          python - <<'PY'
+          import json, platform, sys
+          from pathlib import Path
+          Path('artifact/environment.json').write_text(json.dumps({'python':sys.version,'platform':platform.platform()},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SIDT-results-${{ github.sha }}
+          path: artifact/
+          if-no-files-found: error
